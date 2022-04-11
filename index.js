@@ -70,11 +70,12 @@ app.patch('/users', (req, res) => {
   });
 });
 
+
 app.delete('/users', (req, res) => {
   users.nullResults()
     .then(
       () => {
-        res.status(200).send('Results Deleted');
+        res.status(200).send('Results deleted');
         emitter.emit('update-data', 'users');
       },
       () => res.status(500)
@@ -85,6 +86,13 @@ app.delete('/users', (req, res) => {
 app.post('/tasks', (req, res) => {
   emitter.emit('update-data', 'tasks', req.body);
   res.json(req.body);
+});
+
+
+app.get('/new-game', (req, res) => {
+  users.startNewGame().then(()=> {
+    res.status(200).send('New game started');
+  });
 });
 
 

@@ -23,10 +23,15 @@ async function nullResults() {
   return users.update({}, {$set: {picked: null}}, {multi: true});
 }
 
+async function startNewGame() {
+  return users.remove({});
+}
+
 
 module.exports = {
   logIn,
   getAll,
   pickCard,
   nullResults,
+  startNewGame,
 };
