@@ -15,8 +15,13 @@ async function logIn(user) {
     return users.insert(user);
 }
 
-async function pickCard({name, picked}) {
-  return users.update({name}, {$set: {picked}});
+async function pickCard({id, picked}) {
+  return users.update({_id: id}, {$set: {picked}});
+}
+
+async function deleteUser({id}) {
+  console.log(id)
+  return users.remove({_id: id});
 }
 
 async function nullResults() {
@@ -34,4 +39,5 @@ module.exports = {
   pickCard,
   nullResults,
   startNewGame,
+  deleteUser,
 };

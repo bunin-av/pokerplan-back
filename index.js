@@ -83,6 +83,18 @@ app.delete('/users', (req, res) => {
 });
 
 
+app.delete('/user', (req, res) => {
+  users.deleteUser(req.body)
+    .then(
+      () => {
+        res.status(200).send('User deleted');
+        emitter.emit('update-data', 'users');
+      },
+      () => res.status(500)
+    );
+});
+
+
 app.post('/tasks', (req, res) => {
   emitter.emit('update-data', 'tasks', req.body);
   res.json(req.body);
