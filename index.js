@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const events = require('events');
 
-const users = require('./db/users');
+const {users, tasks} = require('./db/connection');
 
 const app = express();
 
@@ -36,7 +36,10 @@ app.get('/connection', (req, res) => {
     }
 
     if (event === 'tasks') {
-      res.write(`data: ${JSON.stringify(clientEvent)} \n\n`)
+      tasks.getAll().then((tasks) => {
+        clientEvent.data = tasks;
+        res.write(`data: ${JSON.stringify(clientEvent)} \n\n`);
+      });
     }
   });
 });
@@ -95,14 +98,38 @@ app.delete('/user', (req, res) => {
 });
 
 
+app.get('/tasks', (req, res) => {
+  tasks.getAll().then((users) => {
+    res.json(users);
+  });
+});
+
+
 app.post('/tasks', (req, res) => {
-  emitter.emit('update-data', 'tasks', req.body);
-  res.json(req.body);
+  tasks.addTasks(req.body).then((tasks) => {
+    emitter.emit('update-data', 'tasks');
+    res.json(tasks);
+  }).catch((error) => {
+    res.status(500);
+    res.json(error);
+  });
+});
+
+
+app.delete('/tasks', (req, res) => {
+  tasks.deleteTask(req.body)
+    .then(
+      () => {
+        res.status(200).send('Task deleted');
+        emitter.emit('update-data', 'tasks');
+      },
+      () => res.status(500)
+    );
 });
 
 
 app.get('/new-game', (req, res) => {
-  users.startNewGame().then(()=> {
+  Promise.all([users.startNewGame(), tasks.startNewGame()]).then(()=> {
     res.status(200).send('New game started');
   });
 });
