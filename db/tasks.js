@@ -6,13 +6,19 @@ class Tasks {
   }
 
   async getAll() {
-    return this.tasks.find();
+    const tasks = await this.tasks.find();
+    tasks.sort((a, b) => a.result - b.result);
+
+    return tasks;
   }
 
   async addTasks({data}) {
-    console.log(data)
-    const tasks = data.map(link => ({link}));
+    const tasks = data.map(link => ({link, result: null}));
     return this.tasks.insert(tasks);
+  }
+
+  async addTaskResult({id, result}) {
+    return this.tasks.update({_id: id}, {$set: {result}});
   }
 
   async deleteTask({id}) {

@@ -2,7 +2,7 @@ class Users {
   constructor(users) {
     this.users = users;
 
-    users.remove({});
+    this.users.remove({});
   }
 
   async getAll() {

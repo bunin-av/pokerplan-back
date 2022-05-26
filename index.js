@@ -22,22 +22,22 @@ app.get('/connection', (req, res) => {
     'Cache-Control': 'no-cache'
   });
 
-  emitter.on('update-data', (event = 'users', {data} = {}) => {
+  emitter.on('update-data', (event = 'users', data) => {
     const clientEvent = {
       event,
-      data
     };
 
     if (event === 'users') {
       users.getAll().then((users) => {
-        clientEvent.data = users;
+        clientEvent.data = {users, result: data};
+
         res.write(`data: ${JSON.stringify(clientEvent)} \n\n`);
       });
     }
 
     if (event === 'tasks') {
       tasks.getAll().then((tasks) => {
-        clientEvent.data = tasks;
+        clientEvent.data = {tasks};
         res.write(`data: ${JSON.stringify(clientEvent)} \n\n`);
       });
     }
@@ -65,8 +65,23 @@ app.post('/users', (req, res) => {
 
 app.patch('/users', (req, res) => {
   users.pickCard(req.body).then(() => {
-    emitter.emit('update-data');
-    res.json(req.body);
+    users.getAll().then(users => {
+      let results = 0;
+
+      const allPicked = users.every(el => {
+        if (el.picked == null) return false;
+
+        results += el.picked
+
+        return true;
+      });
+
+      const averageResult = (results / users.length).toFixed(1);
+
+      emitter.emit('update-data', 'users', allPicked ? averageResult : null);
+
+      res.json(req.body);
+    })
   }).catch((error) => {
     res.status(500);
     res.json(error);
@@ -116,6 +131,17 @@ app.post('/tasks', (req, res) => {
 });
 
 
+app.patch('/tasks', (req, res) => {
+  tasks.addTaskResult(req.body).then((tasks) => {
+    emitter.emit('update-data', 'tasks');
+    res.json(tasks);
+  }).catch((error) => {
+    res.status(500);
+    res.json(error);
+  });
+});
+
+
 app.delete('/tasks', (req, res) => {
   tasks.deleteTask(req.body)
     .then(
@@ -129,7 +155,7 @@ app.delete('/tasks', (req, res) => {
 
 
 app.get('/new-game', (req, res) => {
-  Promise.all([users.startNewGame(), tasks.startNewGame()]).then(()=> {
+  Promise.all([users.startNewGame(), tasks.startNewGame()]).then(() => {
     res.status(200).send('New game started');
   });
 });
